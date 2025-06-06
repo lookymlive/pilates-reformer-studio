@@ -1,16 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Switch } from '../ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  CheckCircle,
+  Edit,
+  Mail,
+  MoreHorizontal,
+  Phone,
+  Search,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { userService } from "../../services/dataService";
+import { Cliente, Instructor, User, UserRole } from "../../types";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +33,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
+} from "../ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +41,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+} from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Switch } from "../ui/switch";
 import {
   Table,
   TableBody,
@@ -34,57 +59,39 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import {
-  Users,
-  UserPlus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Mail,
-  Phone,
-  Calendar,
-  Star,
-  AlertCircle,
-} from 'lucide-react';
-import { userService } from '../../services/dataService';
-import { User, UserRole, Cliente, Instructor } from '../../types';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+} from "../ui/table";
+import { Textarea } from "../ui/textarea";
 
 export const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState("");
 
   // Form states
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'cliente' as UserRole,
+    name: "",
+    email: "",
+    phone: "",
+    role: "cliente" as UserRole,
     // Cliente specific
-    membership: 'Mensual',
-    level: 'Principiante',
-    medicalNotes: '',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
-    emergencyContactRelationship: '',
+    membership: "Mensual",
+    level: "Principiante",
+    medicalNotes: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelationship: "",
     // Instructor specific
     specialties: [] as string[],
-    experience: '',
-    bio: '',
+    experience: "",
+    bio: "",
     certifications: [] as string[],
   });
 
@@ -92,9 +99,31 @@ export const UserManagement: React.FC = () => {
     loadUsers();
   }, []);
 
+  const filterUsers = useCallback(() => {
+    let filtered = [...users];
+
+    // Filtrar por término de búsqueda
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(term) ||
+          user.email.toLowerCase().includes(term) ||
+          user.phone?.toLowerCase().includes(term)
+      );
+    }
+
+    // Filtrar por rol
+    if (selectedRole !== "all") {
+      filtered = filtered.filter((user) => user.role === selectedRole);
+    }
+
+    setFilteredUsers(filtered);
+  }, [users, searchTerm, selectedRole]);
+
   useEffect(() => {
     filterUsers();
-  }, [users, searchTerm, selectedRole]);
+  }, [users, searchTerm, selectedRole, filterUsers]);
 
   const loadUsers = () => {
     setLoading(true);
@@ -102,48 +131,29 @@ export const UserManagement: React.FC = () => {
       const allUsers = userService.getAll();
       setUsers(allUsers);
     } catch (err) {
-      setError('Error al cargar los usuarios');
+      setError("Error al cargar los usuarios");
     } finally {
       setLoading(false);
     }
   };
 
-  const filterUsers = () => {
-    let filtered = [...users];
-
-    // Filtrar por término de búsqueda
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term) ||
-        user.phone?.toLowerCase().includes(term)
-      );
-    }
-
-    // Filtrar por rol
-    if (selectedRole !== 'all') {
-      filtered = filtered.filter(user => user.role === selectedRole);
-    }
-
-    setFilteredUsers(filtered);
-  };
+  // ...existing code...
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'cliente',
-      membership: 'Mensual',
-      level: 'Principiante',
-      medicalNotes: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      emergencyContactRelationship: '',
+      name: "",
+      email: "",
+      phone: "",
+      role: "cliente",
+      membership: "Mensual",
+      level: "Principiante",
+      medicalNotes: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyContactRelationship: "",
       specialties: [],
-      experience: '',
-      bio: '',
+      experience: "",
+      bio: "",
       certifications: [],
     });
   };
@@ -152,7 +162,7 @@ export const UserManagement: React.FC = () => {
     setSelectedUser(null);
     resetForm();
     setShowCreateDialog(true);
-    setError('');
+    setError("");
   };
 
   const handleEditUser = (user: User) => {
@@ -160,21 +170,22 @@ export const UserManagement: React.FC = () => {
     setFormData({
       name: user.name,
       email: user.email,
-      phone: user.phone || '',
+      phone: user.phone || "",
       role: user.role,
-      membership: (user as Cliente).membership || 'Mensual',
-      level: (user as Cliente).level || 'Principiante',
-      medicalNotes: (user as Cliente).medicalNotes || '',
-      emergencyContactName: (user as Cliente).emergencyContact?.name || '',
-      emergencyContactPhone: (user as Cliente).emergencyContact?.phone || '',
-      emergencyContactRelationship: (user as Cliente).emergencyContact?.relationship || '',
+      membership: (user as Cliente).membership || "Mensual",
+      level: (user as Cliente).level || "Principiante",
+      medicalNotes: (user as Cliente).medicalNotes || "",
+      emergencyContactName: (user as Cliente).emergencyContact?.name || "",
+      emergencyContactPhone: (user as Cliente).emergencyContact?.phone || "",
+      emergencyContactRelationship:
+        (user as Cliente).emergencyContact?.relationship || "",
       specialties: (user as Instructor).specialties || [],
-      experience: (user as Instructor).experience || '',
-      bio: (user as Instructor).bio || '',
+      experience: (user as Instructor).experience || "",
+      bio: (user as Instructor).bio || "",
       certifications: (user as Instructor).certifications || [],
     });
     setShowEditDialog(true);
-    setError('');
+    setError("");
   };
 
   const handleDeleteUser = (user: User) => {
@@ -186,24 +197,26 @@ export const UserManagement: React.FC = () => {
     try {
       userService.toggleActive(user.id);
       loadUsers();
-      setSuccessMessage(`Usuario ${user.isActive ? 'desactivado' : 'activado'} correctamente`);
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setSuccessMessage(
+        `Usuario ${user.isActive ? "desactivado" : "activado"} correctamente`
+      );
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      setError('Error al cambiar el estado del usuario');
+      setError("Error al cambiar el estado del usuario");
     }
   };
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      setError('El nombre es obligatorio');
+      setError("El nombre es obligatorio");
       return false;
     }
     if (!formData.email.trim()) {
-      setError('El email es obligatorio');
+      setError("El email es obligatorio");
       return false;
     }
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError('El email no es válido');
+      setError("El email no es válido");
       return false;
     }
     return true;
@@ -213,7 +226,7 @@ export const UserManagement: React.FC = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const userData: any = {
@@ -224,7 +237,7 @@ export const UserManagement: React.FC = () => {
       };
 
       // Agregar campos específicos según el rol
-      if (formData.role === 'cliente') {
+      if (formData.role === "cliente") {
         userData.membership = formData.membership;
         userData.level = formData.level;
         userData.medicalNotes = formData.medicalNotes;
@@ -235,7 +248,7 @@ export const UserManagement: React.FC = () => {
             relationship: formData.emergencyContactRelationship,
           };
         }
-      } else if (formData.role === 'instructor') {
+      } else if (formData.role === "instructor") {
         userData.specialties = formData.specialties;
         userData.experience = formData.experience;
         userData.bio = formData.bio;
@@ -248,26 +261,26 @@ export const UserManagement: React.FC = () => {
         // Actualizar usuario existente
         const updated = userService.update(selectedUser.id, userData);
         if (updated) {
-          setSuccessMessage('Usuario actualizado correctamente');
+          setSuccessMessage("Usuario actualizado correctamente");
           setShowEditDialog(false);
         } else {
-          setError('Error al actualizar el usuario');
+          setError("Error al actualizar el usuario");
         }
       } else {
         // Crear nuevo usuario
         const created = userService.create(userData);
         if (created) {
-          setSuccessMessage('Usuario creado correctamente');
+          setSuccessMessage("Usuario creado correctamente");
           setShowCreateDialog(false);
         } else {
-          setError('Error al crear el usuario');
+          setError("Error al crear el usuario");
         }
       }
 
       loadUsers();
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      setError('Error al guardar el usuario');
+      setError("Error al guardar el usuario");
     } finally {
       setLoading(false);
     }
@@ -280,15 +293,15 @@ export const UserManagement: React.FC = () => {
     try {
       const deleted = userService.delete(selectedUser.id);
       if (deleted) {
-        setSuccessMessage('Usuario eliminado correctamente');
+        setSuccessMessage("Usuario eliminado correctamente");
         setShowDeleteDialog(false);
         loadUsers();
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setError('Error al eliminar el usuario');
+        setError("Error al eliminar el usuario");
       }
     } catch (err) {
-      setError('Error al eliminar el usuario');
+      setError("Error al eliminar el usuario");
     } finally {
       setLoading(false);
     }
@@ -296,11 +309,15 @@ export const UserManagement: React.FC = () => {
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
-        return <Badge className="bg-purple-100 text-purple-800">Administradora</Badge>;
-      case 'instructor':
+      case "admin":
+        return (
+          <Badge className="bg-purple-100 text-purple-800">
+            Administradora
+          </Badge>
+        );
+      case "instructor":
         return <Badge className="bg-blue-100 text-blue-800">Instructora</Badge>;
-      case 'cliente':
+      case "cliente":
         return <Badge className="bg-green-100 text-green-800">Cliente</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
@@ -309,10 +326,10 @@ export const UserManagement: React.FC = () => {
 
   const getUserStats = () => {
     const total = users.length;
-    const active = users.filter(u => u.isActive).length;
-    const admins = users.filter(u => u.role === 'admin').length;
-    const instructors = users.filter(u => u.role === 'instructor').length;
-    const clients = users.filter(u => u.role === 'cliente').length;
+    const active = users.filter((u) => u.isActive).length;
+    const admins = users.filter((u) => u.role === "admin").length;
+    const instructors = users.filter((u) => u.role === "instructor").length;
+    const clients = users.filter((u) => u.role === "cliente").length;
 
     return { total, active, admins, instructors, clients };
   };
@@ -324,10 +341,17 @@ export const UserManagement: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-600">Administra clientes, instructores y personal del estudio</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Gestión de Usuarios
+          </h1>
+          <p className="text-gray-600">
+            Administra clientes, instructores y personal del estudio
+          </p>
         </div>
-        <Button onClick={handleCreateUser} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button
+          onClick={handleCreateUser}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Nuevo Usuario
         </Button>
@@ -343,7 +367,9 @@ export const UserManagement: React.FC = () => {
           >
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              <AlertDescription className="text-green-800">
+                {successMessage}
+              </AlertDescription>
             </Alert>
           </motion.div>
         )}
@@ -366,25 +392,33 @@ export const UserManagement: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.active}
+            </div>
             <p className="text-xs text-muted-foreground">Usuarios Activos</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">{stats.admins}</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {stats.admins}
+            </div>
             <p className="text-xs text-muted-foreground">Administradores</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{stats.instructors}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.instructors}
+            </div>
             <p className="text-xs text-muted-foreground">Instructoras</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-emerald-600">{stats.clients}</div>
+            <div className="text-2xl font-bold text-emerald-600">
+              {stats.clients}
+            </div>
             <p className="text-xs text-muted-foreground">Clientes</p>
           </CardContent>
         </Card>
@@ -422,9 +456,7 @@ export const UserManagement: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Usuarios ({filteredUsers.length})</CardTitle>
-          <CardDescription>
-            Usuarios registrados en el sistema
-          </CardDescription>
+          <CardDescription>Usuarios registrados en el sistema</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -452,12 +484,17 @@ export const UserManagement: React.FC = () => {
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar} alt={user.name} />
                           <AvatarFallback>
-                            {user.name.split(' ').map(n => n[0]).join('')}
+                            {user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="text-sm text-gray-500">
+                            {user.email}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
@@ -483,12 +520,14 @@ export const UserManagement: React.FC = () => {
                           onCheckedChange={() => handleToggleActive(user)}
                         />
                         <span className="text-sm">
-                          {user.isActive ? 'Activo' : 'Inactivo'}
+                          {user.isActive ? "Activo" : "Inactivo"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
-                      {format(new Date(user.joinDate), 'dd/MM/yyyy', { locale: es })}
+                      {format(new Date(user.joinDate), "dd/MM/yyyy", {
+                        locale: es,
+                      })}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -499,12 +538,14 @@ export const UserManagement: React.FC = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                          <DropdownMenuItem
+                            onClick={() => handleEditUser(user)}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleDeleteUser(user)}
                             className="text-red-600"
                           >
@@ -523,23 +564,25 @@ export const UserManagement: React.FC = () => {
       </Card>
 
       {/* Dialog para crear/editar usuario */}
-      <Dialog open={showCreateDialog || showEditDialog} onOpenChange={(open) => {
-        if (!open) {
-          setShowCreateDialog(false);
-          setShowEditDialog(false);
-          setError('');
-        }
-      }}>
+      <Dialog
+        open={showCreateDialog || showEditDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowCreateDialog(false);
+            setShowEditDialog(false);
+            setError("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedUser ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+              {selectedUser ? "Editar Usuario" : "Crear Nuevo Usuario"}
             </DialogTitle>
             <DialogDescription>
-              {selectedUser 
-                ? 'Modifica la información del usuario' 
-                : 'Completa la información para crear un nuevo usuario'
-              }
+              {selectedUser
+                ? "Modifica la información del usuario"
+                : "Completa la información para crear un nuevo usuario"}
             </DialogDescription>
           </DialogHeader>
 
@@ -551,7 +594,9 @@ export const UserManagement: React.FC = () => {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Nombre completo del usuario"
                 />
               </div>
@@ -562,7 +607,9 @@ export const UserManagement: React.FC = () => {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="email@ejemplo.com"
                 />
               </div>
@@ -572,16 +619,20 @@ export const UserManagement: React.FC = () => {
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   placeholder="+54 11 1234-5678"
                 />
               </div>
 
               <div>
                 <Label htmlFor="role">Rol *</Label>
-                <Select 
-                  value={formData.role} 
-                  onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
+                <Select
+                  value={formData.role}
+                  onValueChange={(value: UserRole) =>
+                    setFormData({ ...formData, role: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un rol" />
@@ -596,16 +647,20 @@ export const UserManagement: React.FC = () => {
             </div>
 
             {/* Campos específicos para cliente */}
-            {formData.role === 'cliente' && (
+            {formData.role === "cliente" && (
               <div className="space-y-4 border-t pt-4">
-                <h4 className="font-medium text-gray-900">Información del Cliente</h4>
-                
+                <h4 className="font-medium text-gray-900">
+                  Información del Cliente
+                </h4>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="membership">Membresía</Label>
-                    <Select 
-                      value={formData.membership} 
-                      onValueChange={(value) => setFormData({ ...formData, membership: value })}
+                    <Select
+                      value={formData.membership}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, membership: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -621,15 +676,19 @@ export const UserManagement: React.FC = () => {
 
                   <div>
                     <Label htmlFor="level">Nivel</Label>
-                    <Select 
-                      value={formData.level} 
-                      onValueChange={(value) => setFormData({ ...formData, level: value })}
+                    <Select
+                      value={formData.level}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, level: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Principiante">Principiante</SelectItem>
+                        <SelectItem value="Principiante">
+                          Principiante
+                        </SelectItem>
                         <SelectItem value="Intermedio">Intermedio</SelectItem>
                         <SelectItem value="Avanzado">Avanzado</SelectItem>
                       </SelectContent>
@@ -642,7 +701,9 @@ export const UserManagement: React.FC = () => {
                   <Textarea
                     id="medicalNotes"
                     value={formData.medicalNotes}
-                    onChange={(e) => setFormData({ ...formData, medicalNotes: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, medicalNotes: e.target.value })
+                    }
                     placeholder="Lesiones, condiciones médicas, limitaciones..."
                     rows={3}
                   />
@@ -653,17 +714,32 @@ export const UserManagement: React.FC = () => {
                   <div className="grid grid-cols-1 gap-2">
                     <Input
                       value={formData.emergencyContactName}
-                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          emergencyContactName: e.target.value,
+                        })
+                      }
                       placeholder="Nombre del contacto"
                     />
                     <Input
                       value={formData.emergencyContactPhone}
-                      onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          emergencyContactPhone: e.target.value,
+                        })
+                      }
                       placeholder="Teléfono del contacto"
                     />
                     <Input
                       value={formData.emergencyContactRelationship}
-                      onChange={(e) => setFormData({ ...formData, emergencyContactRelationship: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          emergencyContactRelationship: e.target.value,
+                        })
+                      }
                       placeholder="Relación (esposo, hermana, etc.)"
                     />
                   </div>
@@ -672,16 +748,20 @@ export const UserManagement: React.FC = () => {
             )}
 
             {/* Campos específicos para instructor */}
-            {formData.role === 'instructor' && (
+            {formData.role === "instructor" && (
               <div className="space-y-4 border-t pt-4">
-                <h4 className="font-medium text-gray-900">Información de la Instructora</h4>
-                
+                <h4 className="font-medium text-gray-900">
+                  Información de la Instructora
+                </h4>
+
                 <div>
                   <Label htmlFor="experience">Experiencia</Label>
                   <Input
                     id="experience"
                     value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, experience: e.target.value })
+                    }
                     placeholder="5 años, 10 años, etc."
                   />
                 </div>
@@ -691,34 +771,50 @@ export const UserManagement: React.FC = () => {
                   <Textarea
                     id="bio"
                     value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bio: e.target.value })
+                    }
                     placeholder="Breve descripción profesional..."
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="specialties">Especialidades (separadas por coma)</Label>
+                  <Label htmlFor="specialties">
+                    Especialidades (separadas por coma)
+                  </Label>
                   <Input
                     id="specialties"
-                    value={formData.specialties.join(', ')}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      specialties: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                    })}
-                    placeholder="Reformer Básico, Rehabilitación, Embarazadas"
+                    value={formData.specialties.join(", ")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        specialties: e.target.value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                    placeholder="Reformer Básico, Rehabilitación"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="certifications">Certificaciones (separadas por coma)</Label>
+                  <Label htmlFor="certifications">
+                    Certificaciones (separadas por coma)
+                  </Label>
                   <Input
                     id="certifications"
-                    value={formData.certifications.join(', ')}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      certifications: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                    })}
+                    value={formData.certifications.join(", ")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        certifications: e.target.value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
                     placeholder="PMA Certified, Stott Pilates Level 3"
                   />
                 </div>
@@ -728,25 +824,34 @@ export const UserManagement: React.FC = () => {
             {error && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{error}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
           </div>
 
           <DialogFooter className="space-x-2">
-            <Button variant="outline" onClick={() => {
-              setShowCreateDialog(false);
-              setShowEditDialog(false);
-              setError('');
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateDialog(false);
+                setShowEditDialog(false);
+                setError("");
+              }}
+            >
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={saveUser}
               disabled={loading}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
-              {loading ? 'Guardando...' : selectedUser ? 'Actualizar' : 'Crear Usuario'}
+              {loading
+                ? "Guardando..."
+                : selectedUser
+                ? "Actualizar"
+                : "Crear Usuario"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -758,7 +863,8 @@ export const UserManagement: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Confirmar Eliminación</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.
+              ¿Estás seguro de que quieres eliminar este usuario? Esta acción no
+              se puede deshacer.
             </DialogDescription>
           </DialogHeader>
 
@@ -766,9 +872,15 @@ export const UserManagement: React.FC = () => {
             <div className="bg-gray-50 p-3 rounded">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.name} />
+                  <AvatarImage
+                    src={selectedUser.avatar}
+                    alt={selectedUser.name}
+                  />
                   <AvatarFallback>
-                    {selectedUser.name.split(' ').map(n => n[0]).join('')}
+                    {selectedUser.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -781,15 +893,18 @@ export const UserManagement: React.FC = () => {
           )}
 
           <DialogFooter className="space-x-2">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               Cancelar
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={confirmDeleteUser}
               disabled={loading}
             >
-              {loading ? 'Eliminando...' : 'Eliminar Usuario'}
+              {loading ? "Eliminando..." : "Eliminar Usuario"}
             </Button>
           </DialogFooter>
         </DialogContent>
