@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth, useRole } from '../../contexts/AuthContext';
-import { Button } from './button';
-import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { Badge } from './badge';
+import { motion } from "framer-motion";
+import {
+  BarChart3,
+  BookOpen,
+  Calendar,
+  Clock,
+  Heart,
+  Home,
+  LogOut,
+  Mail,
+  MapPin,
+  Menu,
+  Phone,
+  Settings,
+  User,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import React, { useState } from "react";
+import { useAuth, useRole } from "../../contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import { Badge } from "./badge";
+import { Button } from "./button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './dropdown-menu';
+} from "./dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -19,25 +36,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from './sheet';
-import {
-  Home,
-  Users,
-  Calendar,
-  BarChart3,
-  Settings,
-  BookOpen,
-  UserCheck,
-  Clock,
-  CreditCard,
-  User,
-  LogOut,
-  Menu,
-  Heart,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react';
+} from "./sheet";
 
 interface NavigationItem {
   id: string;
@@ -51,108 +50,108 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   // Admin Navigation
   {
-    id: 'admin-dashboard',
-    label: 'Dashboard',
+    id: "admin-dashboard",
+    label: "Dashboard",
     icon: Home,
-    path: '/dashboard',
-    roles: ['admin'],
+    path: "/dashboard",
+    roles: ["admin"],
   },
   {
-    id: 'admin-users',
-    label: 'Gestión de Usuarios',
+    id: "admin-users",
+    label: "Gestión de Usuarios",
     icon: Users,
-    path: '/admin/users',
-    roles: ['admin'],
+    path: "/admin/users",
+    roles: ["admin"],
   },
   {
-    id: 'admin-schedule',
-    label: 'Gestión de Horarios',
+    id: "admin-schedule",
+    label: "Gestión de Horarios",
     icon: Calendar,
-    path: '/admin/schedule',
-    roles: ['admin'],
+    path: "/admin/schedule",
+    roles: ["admin"],
   },
   {
-    id: 'admin-reports',
-    label: 'Reportes',
+    id: "admin-reports",
+    label: "Reportes",
     icon: BarChart3,
-    path: '/admin/reports',
-    roles: ['admin'],
+    path: "/admin/reports",
+    roles: ["admin"],
   },
   {
-    id: 'admin-settings',
-    label: 'Configuración',
+    id: "admin-settings",
+    label: "Configuración",
     icon: Settings,
-    path: '/admin/settings',
-    roles: ['admin'],
+    path: "/admin/settings",
+    roles: ["admin"],
   },
 
   // Instructor Navigation
   {
-    id: 'instructor-dashboard',
-    label: 'Dashboard',
+    id: "instructor-dashboard",
+    label: "Dashboard",
     icon: Home,
-    path: '/dashboard',
-    roles: ['instructor'],
+    path: "/dashboard",
+    roles: ["instructor"],
   },
   {
-    id: 'instructor-classes',
-    label: 'Mis Clases',
+    id: "instructor-classes",
+    label: "Mis Clases",
     icon: BookOpen,
-    path: '/instructor/classes',
-    roles: ['instructor'],
-    badge: '5',
+    path: "/instructor/classes",
+    roles: ["instructor"],
+    badge: "5",
   },
   {
-    id: 'instructor-students',
-    label: 'Mis Alumnos',
+    id: "instructor-students",
+    label: "Mis Alumnos",
     icon: UserCheck,
-    path: '/instructor/students',
-    roles: ['instructor'],
+    path: "/instructor/students",
+    roles: ["instructor"],
   },
   {
-    id: 'instructor-schedule',
-    label: 'Mi Horario',
+    id: "instructor-schedule",
+    label: "Mi Horario",
     icon: Clock,
-    path: '/instructor/schedule',
-    roles: ['instructor'],
+    path: "/instructor/schedule",
+    roles: ["instructor"],
   },
 
   // Client Navigation
   {
-    id: 'client-dashboard',
-    label: 'Dashboard',
+    id: "client-dashboard",
+    label: "Dashboard",
     icon: Home,
-    path: '/dashboard',
-    roles: ['cliente'],
+    path: "/dashboard",
+    roles: ["cliente"],
   },
   {
-    id: 'client-book',
-    label: 'Reservar Clases',
+    id: "client-book",
+    label: "Reservar Clases",
     icon: Calendar,
-    path: '/client/book',
-    roles: ['cliente'],
+    path: "/client/book",
+    roles: ["cliente"],
   },
   {
-    id: 'client-bookings',
-    label: 'Mis Reservas',
+    id: "client-bookings",
+    label: "Mis Reservas",
     icon: BookOpen,
-    path: '/client/bookings',
-    roles: ['cliente'],
-    badge: '3',
+    path: "/client/bookings",
+    roles: ["cliente"],
+    badge: "3",
   },
   {
-    id: 'client-profile',
-    label: 'Mi Perfil',
+    id: "client-profile",
+    label: "Mi Perfil",
     icon: User,
-    path: '/client/profile',
-    roles: ['cliente'],
+    path: "/client/profile",
+    roles: ["cliente"],
   },
   {
-    id: 'client-instructors',
-    label: 'Instructores',
+    id: "client-instructors",
+    label: "Instructores",
     icon: UserCheck,
-    path: '/client/instructors',
-    roles: ['cliente'],
+    path: "/client/instructors",
+    roles: ["cliente"],
   },
 ];
 
@@ -161,14 +160,17 @@ interface NavigationProps {
   onNavigate: (path: string) => void;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate }) => {
+export const Navigation: React.FC<NavigationProps> = ({
+  currentPath,
+  onNavigate,
+}) => {
   const { user, logout } = useAuth();
   const { userRole } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (!user) return null;
 
-  const filteredNavItems = navigationItems.filter(item => 
+  const filteredNavItems = navigationItems.filter((item) =>
     item.roles.includes(user.role)
   );
 
@@ -184,19 +186,27 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin': return 'Administradora';
-      case 'instructor': return 'Instructora';
-      case 'cliente': return 'Cliente';
-      default: return role;
+      case "admin":
+        return "Administradora";
+      case "instructor":
+        return "Instructora";
+      case "cliente":
+        return "Cliente";
+      default:
+        return role;
     }
   };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'instructor': return 'bg-blue-100 text-blue-800';
-      case 'cliente': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "admin":
+        return "bg-purple-100 text-purple-800";
+      case "instructor":
+        return "bg-blue-100 text-blue-800";
+      case "cliente":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -212,7 +222,9 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                 <Heart className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg">Silvia Fernandez</h1>
+                <h1 className="text-white font-bold text-lg">
+                  Silvia Fernandez
+                </h1>
                 <p className="text-emerald-200 text-sm">Pilates Studio</p>
               </div>
             </div>
@@ -223,12 +235,19 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
             <Avatar className="h-10 w-10 mr-3">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback className="bg-emerald-600 text-white">
-                {user.name.split(' ').map(n => n[0]).join('')}
+                {user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm truncate">{user.name}</p>
-              <Badge className={`text-xs ${getRoleBadgeColor(user.role)} border-0`}>
+              <p className="text-white font-medium text-sm truncate">
+                {user.name}
+              </p>
+              <Badge
+                className={`text-xs ${getRoleBadgeColor(user.role)} border-0`}
+              >
                 {getRoleDisplayName(user.role)}
               </Badge>
             </div>
@@ -239,16 +258,17 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
             {filteredNavItems.map((item) => {
               const isActive = currentPath === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <motion.button
                   key={item.id}
                   onClick={() => handleNavigation(item.path)}
                   className={`
                     group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left
-                    ${isActive 
-                      ? 'bg-emerald-700 text-white' 
-                      : 'text-emerald-100 hover:bg-emerald-700 hover:text-white'
+                    ${
+                      isActive
+                        ? "bg-emerald-700 text-white"
+                        : "text-emerald-100 hover:bg-emerald-700 hover:text-white"
                     }
                   `}
                   whileHover={{ scale: 1.02 }}
@@ -279,13 +299,14 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
               </div>
               <div className="flex items-center">
                 <Mail className="w-3 h-3 mr-1" />
-                <span>info@pilatesreformer.com</span>
+                <span>Pasaje Ramirez 6076, Rosario Sant Fe</span>
+                <span>+54 341 2737 492</span>
               </div>
             </div>
-            
-            <Button 
+
+            <Button
               onClick={handleLogout}
-              variant="ghost" 
+              variant="ghost"
               className="w-full mt-4 text-emerald-200 hover:text-white hover:bg-emerald-700"
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -309,16 +330,22 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                   <h1 className="text-white font-bold">Pilates Studio</h1>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 {/* User Profile Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full"
+                    >
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="bg-emerald-600 text-white text-xs">
-                          {user.name.split(' ').map(n => n[0]).join('')}
+                          {user.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -326,11 +353,17 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-sm font-medium leading-none">
+                          {user.name}
+                        </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        <Badge className={`text-xs ${getRoleBadgeColor(user.role)} border-0 w-fit`}>
+                        <Badge
+                          className={`text-xs ${getRoleBadgeColor(
+                            user.role
+                          )} border-0 w-fit`}
+                        >
                           {getRoleDisplayName(user.role)}
                         </Badge>
                       </div>
@@ -344,7 +377,10 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                 </DropdownMenu>
 
                 {/* Mobile Menu Button */}
-                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <Sheet
+                  open={isMobileMenuOpen}
+                  onOpenChange={setIsMobileMenuOpen}
+                >
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="text-white">
                       <Menu className="h-6 w-6" />
@@ -362,12 +398,12 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                         Accede a todas las funciones de la aplicación
                       </SheetDescription>
                     </SheetHeader>
-                    
+
                     <nav className="mt-6 space-y-1">
                       {filteredNavItems.map((item) => {
                         const isActive = currentPath === item.path;
                         const Icon = item.icon;
-                        
+
                         return (
                           <Button
                             key={item.id}
@@ -376,7 +412,9 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
                             className="w-full justify-start"
                           >
                             <Icon className="mr-3 h-4 w-4" />
-                            <span className="flex-1 text-left">{item.label}</span>
+                            <span className="flex-1 text-left">
+                              {item.label}
+                            </span>
                             {item.badge && (
                               <Badge className="ml-2 bg-red-500 text-white text-xs">
                                 {item.badge}
