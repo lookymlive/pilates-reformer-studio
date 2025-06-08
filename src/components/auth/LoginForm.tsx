@@ -90,7 +90,7 @@ export const LoginForm: React.FC = () => {
 
   // Datos de demostración para facilitar el testing
   const demoAccounts = [
-    { email: 'silvia@pilatesreformer.com', role: 'Administradora', name: 'Silvia Fernandez' },
+    { email: 'silviafpilates@gmail.com', role: 'Administradora', name: 'Silvia Fernandez' },
     { email: 'maria@pilatesreformer.com', role: 'Instructora', name: 'María González' },
     { email: 'ana@pilatesreformer.com', role: 'Instructora', name: 'Ana López' },
     { email: 'carmen@gmail.com', role: 'Cliente', name: 'Carmen Rodriguez' },
