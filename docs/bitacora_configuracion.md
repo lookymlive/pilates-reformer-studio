@@ -41,6 +41,13 @@
 - Continuar el desarrollo de features y UI según la guía técnica en `docs/`.
 - Mantener esta bitácora y actualizarla ante cualquier cambio relevante.
 
+## 6. Configuración avanzada de horarios y settings (2025-06-06)
+
+- Se modeló la tabla `studio_settings` en Supabase para almacenar días de apertura, turnos, camas y feriados.
+- Se creó el servicio `settingsService.ts` para leer y actualizar la configuración desde Supabase.
+- Se integró la UI de configuración admin para editar y guardar estos datos.
+- Próximo: conectar la UI para que lea y guarde en Supabase en tiempo real y validar permisos de admin.
+
 ---
 
 **Esta guía sirve como referencia para Product Manager, IA DEV y UI/UX en caso de restaurar, migrar o continuar el desarrollo.**
