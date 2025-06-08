@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { format, isPast, isToday, isTomorrow } from "date-fns";
+import { es } from "date-fns/locale";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Phone,
+  User,
+  XCircle,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  bookingService,
+  classService,
+  classTypeService,
+  equipmentService,
+  userService,
+} from "../../services/dataService";
+import { Booking, Class, ClassType, Equipment, Instructor } from "../../types";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,33 +32,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
-import {
-  Calendar,
-  Clock,
-  User,
-  MapPin,
-  DollarSign,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  MoreHorizontal,
-  Phone,
-  Mail,
-} from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { 
-  bookingService, 
-  classService, 
-  classTypeService, 
-  equipmentService, 
-  userService 
-} from '../../services/dataService';
-import { Booking, Class, ClassType, Equipment, Instructor } from '../../types';
-import { format, isPast, isToday, isTomorrow } from 'date-fns';
-import { es } from 'date-fns/locale';
+} from "../ui/dialog";
+import { Label } from "../ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Textarea } from "../ui/textarea";
 
 export const MyBookings: React.FC = () => {
   const { user } = useAuth();
@@ -46,9 +43,9 @@ export const MyBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [error, setError] = useState("");
 
   // Estados para datos relacionados
   const [classes, setClasses] = useState<Class[]>([]);
@@ -56,16 +53,9 @@ export const MyBookings: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      loadBookings();
-      loadRelatedData();
-    }
-  }, [user]);
-
-  const loadBookings = () => {
+  const loadBookings = useCallback(() => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const userBookings = bookingService.getByClient(user.id);
@@ -74,50 +64,73 @@ export const MyBookings: React.FC = () => {
         const classA = classService.getById(a.classId);
         const classB = classService.getById(b.classId);
         if (!classA || !classB) return 0;
-        return new Date(classB.date).getTime() - new Date(classA.date).getTime();
+        return (
+          new Date(classB.date).getTime() - new Date(classA.date).getTime()
+        );
       });
       setBookings(userBookings);
     } catch (err) {
-      setError('Error al cargar las reservas');
+      setError("Error al cargar las reservas");
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadBookings();
+      loadRelatedData();
+    }
+  }, [user, loadBookings]);
 
   const loadRelatedData = () => {
     setClasses(classService.getAll());
     setClassTypes(classTypeService.getAll());
     setEquipment(equipmentService.getAll());
-    setInstructors(userService.getByRole('instructor') as Instructor[]);
+    setInstructors(userService.getByRole("instructor") as Instructor[]);
   };
 
   const getClassData = (classId: string) => {
-    const classData = classes.find(c => c.id === classId);
+    const classData = classes.find((c) => c.id === classId);
     if (!classData) return null;
 
-    const classType = classTypes.find(ct => ct.id === classData.classTypeId);
-    const equipmentData = equipment.find(eq => eq.id === classData.equipmentId);
-    const instructor = instructors.find(inst => inst.id === classData.instructorId);
+    const classType = classTypes.find((ct) => ct.id === classData.classTypeId);
+    const equipmentData = equipment.find(
+      (eq) => eq.id === classData.equipmentId
+    );
+    const instructor = instructors.find(
+      (inst) => inst.id === classData.instructorId
+    );
 
     return { classData, classType, equipmentData, instructor };
   };
 
   const getBookingStatusBadge = (booking: Booking) => {
-    const classData = classes.find(c => c.id === booking.classId);
-    const isPastClass = classData ? isPast(new Date(classData.date + 'T' + classData.time)) : false;
+    const classData = classes.find((c) => c.id === booking.classId);
+    const isPastClass = classData
+      ? isPast(new Date(classData.date + "T" + classData.time))
+      : false;
 
     switch (booking.status) {
-      case 'confirmada':
+      case "confirmada":
         if (isPastClass) {
-          return <Badge className="bg-green-100 text-green-800">Completada</Badge>;
+          return (
+            <Badge className="bg-green-100 text-green-800">Completada</Badge>
+          );
         }
         return <Badge className="bg-blue-100 text-blue-800">Confirmada</Badge>;
-      case 'en_espera':
-        return <Badge className="bg-yellow-100 text-yellow-800">Lista de Espera</Badge>;
-      case 'cancelada':
+      case "en_espera":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800">
+            Lista de Espera
+          </Badge>
+        );
+      case "cancelada":
         return <Badge className="bg-red-100 text-red-800">Cancelada</Badge>;
-      case 'completada':
-        return <Badge className="bg-green-100 text-green-800">Completada</Badge>;
+      case "completada":
+        return (
+          <Badge className="bg-green-100 text-green-800">Completada</Badge>
+        );
       default:
         return <Badge variant="outline">{booking.status}</Badge>;
     }
@@ -125,11 +138,13 @@ export const MyBookings: React.FC = () => {
 
   const getPaymentStatusBadge = (paymentStatus: string) => {
     switch (paymentStatus) {
-      case 'pagado':
+      case "pagado":
         return <Badge className="bg-green-100 text-green-800">Pagado</Badge>;
-      case 'pendiente':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
-      case 'reembolsado':
+      case "pendiente":
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
+        );
+      case "reembolsado":
         return <Badge className="bg-gray-100 text-gray-800">Reembolsado</Badge>;
       default:
         return <Badge variant="outline">{paymentStatus}</Badge>;
@@ -137,49 +152,53 @@ export const MyBookings: React.FC = () => {
   };
 
   const canCancelBooking = (booking: Booking): boolean => {
-    if (booking.status === 'cancelada') return false;
-    
-    const classData = classes.find(c => c.id === booking.classId);
+    if (booking.status === "cancelada") return false;
+
+    const classData = classes.find((c) => c.id === booking.classId);
     if (!classData) return false;
 
     // No se puede cancelar si la clase ya pasó
-    const classDateTime = new Date(classData.date + 'T' + classData.time);
+    const classDateTime = new Date(classData.date + "T" + classData.time);
     if (isPast(classDateTime)) return false;
 
     // Política: se puede cancelar hasta 24 horas antes
     const now = new Date();
-    const hoursUntilClass = (classDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const hoursUntilClass =
+      (classDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
     return hoursUntilClass >= 24;
   };
 
   const handleCancelBooking = (booking: Booking) => {
     setSelectedBooking(booking);
     setShowCancelDialog(true);
-    setCancelReason('');
-    setError('');
+    setCancelReason("");
+    setError("");
   };
 
   const confirmCancelBooking = async () => {
     if (!selectedBooking) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const success = bookingService.cancel(selectedBooking.id, cancelReason || undefined);
-      
+      const success = bookingService.cancel(
+        selectedBooking.id,
+        cancelReason || undefined
+      );
+
       if (success) {
-        setSuccessMessage('Reserva cancelada exitosamente');
+        setSuccessMessage("Reserva cancelada exitosamente");
         setShowCancelDialog(false);
         loadBookings(); // Recargar reservas
-        
+
         // Limpiar mensaje después de 3 segundos
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setError('Error al cancelar la reserva');
+        setError("Error al cancelar la reserva");
       }
     } catch (err) {
-      setError('Error al cancelar la reserva');
+      setError("Error al cancelar la reserva");
     } finally {
       setLoading(false);
     }
@@ -187,23 +206,27 @@ export const MyBookings: React.FC = () => {
 
   const getDateLabel = (dateString: string) => {
     const date = new Date(dateString);
-    if (isToday(date)) return 'Hoy';
-    if (isTomorrow(date)) return 'Mañana';
-    return format(date, 'EEEE, d MMMM', { locale: es });
+    if (isToday(date)) return "Hoy";
+    if (isTomorrow(date)) return "Mañana";
+    return format(date, "EEEE, d MMMM", { locale: es });
   };
 
-  const filterBookings = (status: 'all' | 'upcoming' | 'completed' | 'cancelled') => {
-    return bookings.filter(booking => {
-      const classData = classes.find(c => c.id === booking.classId);
-      const isPastClass = classData ? isPast(new Date(classData.date + 'T' + classData.time)) : false;
+  const filterBookings = (
+    status: "all" | "upcoming" | "completed" | "cancelled"
+  ) => {
+    return bookings.filter((booking) => {
+      const classData = classes.find((c) => c.id === booking.classId);
+      const isPastClass = classData
+        ? isPast(new Date(classData.date + "T" + classData.time))
+        : false;
 
       switch (status) {
-        case 'upcoming':
-          return !isPastClass && booking.status !== 'cancelada';
-        case 'completed':
-          return isPastClass || booking.status === 'completada';
-        case 'cancelled':
-          return booking.status === 'cancelada';
+        case "upcoming":
+          return !isPastClass && booking.status !== "cancelada";
+        case "completed":
+          return isPastClass || booking.status === "completada";
+        case "cancelled":
+          return booking.status === "cancelada";
         default:
           return true;
       }
@@ -237,7 +260,9 @@ export const MyBookings: React.FC = () => {
           >
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              <AlertDescription className="text-green-800">
+                {successMessage}
+              </AlertDescription>
             </Alert>
           </motion.div>
         )}
@@ -256,31 +281,33 @@ export const MyBookings: React.FC = () => {
         <TabsList>
           <TabsTrigger value="all">Todas ({bookings.length})</TabsTrigger>
           <TabsTrigger value="upcoming">
-            Próximas ({filterBookings('upcoming').length})
+            Próximas ({filterBookings("upcoming").length})
           </TabsTrigger>
           <TabsTrigger value="completed">
-            Completadas ({filterBookings('completed').length})
+            Completadas ({filterBookings("completed").length})
           </TabsTrigger>
           <TabsTrigger value="cancelled">
-            Canceladas ({filterBookings('cancelled').length})
+            Canceladas ({filterBookings("cancelled").length})
           </TabsTrigger>
         </TabsList>
 
-        {['all', 'upcoming', 'completed', 'cancelled'].map((tabValue) => (
+        {["all", "upcoming", "completed", "cancelled"].map((tabValue) => (
           <TabsContent key={tabValue} value={tabValue} className="space-y-4">
             {filterBookings(tabValue as any).length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
                   <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    {tabValue === 'upcoming' && 'No tienes clases próximas'}
-                    {tabValue === 'completed' && 'No tienes clases completadas'}
-                    {tabValue === 'cancelled' && 'No tienes clases canceladas'}
-                    {tabValue === 'all' && 'No tienes reservas'}
+                    {tabValue === "upcoming" && "No tienes clases próximas"}
+                    {tabValue === "completed" && "No tienes clases completadas"}
+                    {tabValue === "cancelled" && "No tienes clases canceladas"}
+                    {tabValue === "all" && "No tienes reservas"}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {tabValue === 'upcoming' && '¡Es hora de reservar tu próxima clase!'}
-                    {tabValue === 'all' && '¡Reserva tu primera clase de Pilates!'}
+                    {tabValue === "upcoming" &&
+                      "¡Es hora de reservar tu próxima clase!"}
+                    {tabValue === "all" &&
+                      "¡Reserva tu primera clase de Pilates!"}
                   </p>
                 </CardContent>
               </Card>
@@ -290,7 +317,8 @@ export const MyBookings: React.FC = () => {
                   const data = getClassData(booking.classId);
                   if (!data) return null;
 
-                  const { classData, classType, equipmentData, instructor } = data;
+                  const { classData, classType, equipmentData, instructor } =
+                    data;
                   const canCancel = canCancelBooking(booking);
 
                   return (
@@ -318,7 +346,9 @@ export const MyBookings: React.FC = () => {
                                 </div>
                                 <div className="flex items-center">
                                   <Clock className="w-4 h-4 mr-2" />
-                                  <span>{classData.time} ({classData.duration} min)</span>
+                                  <span>
+                                    {classData.time} ({classData.duration} min)
+                                  </span>
                                 </div>
                                 <div className="flex items-center">
                                   <User className="w-4 h-4 mr-2" />
@@ -335,7 +365,12 @@ export const MyBookings: React.FC = () => {
                                   ${classData.price.toLocaleString()}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  Reservado el {format(new Date(booking.bookingDate), 'd MMM yyyy', { locale: es })}
+                                  Reservado el{" "}
+                                  {format(
+                                    new Date(booking.bookingDate),
+                                    "d MMM yyyy",
+                                    { locale: es }
+                                  )}
                                 </div>
                               </div>
 
@@ -347,7 +382,8 @@ export const MyBookings: React.FC = () => {
 
                               {booking.cancellationReason && (
                                 <div className="mt-3 p-2 bg-red-50 rounded text-sm text-red-800">
-                                  <strong>Motivo de cancelación:</strong> {booking.cancellationReason}
+                                  <strong>Motivo de cancelación:</strong>{" "}
+                                  {booking.cancellationReason}
                                 </div>
                               )}
                             </div>
@@ -364,7 +400,7 @@ export const MyBookings: React.FC = () => {
                                   Cancelar
                                 </Button>
                               )}
-                              
+
                               {instructor && (
                                 <Button variant="ghost" size="sm">
                                   <Phone className="w-4 h-4 mr-1" />
@@ -401,7 +437,7 @@ export const MyBookings: React.FC = () => {
                   const data = getClassData(selectedBooking.classId);
                   if (!data) return null;
                   const { classData, classType } = data;
-                  
+
                   return (
                     <div>
                       <p className="font-medium">{classType?.name}</p>
@@ -414,7 +450,9 @@ export const MyBookings: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cancel-reason">Motivo de cancelación (opcional)</Label>
+                <Label htmlFor="cancel-reason">
+                  Motivo de cancelación (opcional)
+                </Label>
                 <Textarea
                   id="cancel-reason"
                   placeholder="Puedes agregar un motivo para la cancelación..."
@@ -434,15 +472,18 @@ export const MyBookings: React.FC = () => {
           )}
 
           <DialogFooter className="space-x-2">
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+            >
               Mantener Reserva
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={confirmCancelBooking}
               disabled={loading}
             >
-              {loading ? 'Cancelando...' : 'Cancelar Reserva'}
+              {loading ? "Cancelando..." : "Cancelar Reserva"}
             </Button>
           </DialogFooter>
         </DialogContent>
