@@ -72,8 +72,8 @@ export const ClassCalendar: React.FC<ClassCalendarProps> = ({
     setInstructors(userService.getByRole("instructor") as Instructor[]);
 
     const handleDataUpdate = () => {
-      setClassTypes(classService.getAllClassTypes());
-      setEquipment(classService.getAllEquipment());
+      setClassTypes(classTypeService.getAll());
+      setEquipment(equipmentService.getAll());
       setInstructors(userService.getByRole("instructor") as Instructor[]);
     };
     window.addEventListener("dataUpdate", handleDataUpdate);
