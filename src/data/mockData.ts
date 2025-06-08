@@ -1,3 +1,43 @@
+// Configuración general para panel administrativo
+export const adminConfig = {
+  enabled: true,
+  message:
+    "Funcionalidad en desarrollo... Aquí podrás controlar toda la configuración del estudio como administrador.",
+  sections: [
+    {
+      name: "Horarios y Disponibilidad",
+      enabled: true,
+    },
+    {
+      name: "Instructores",
+      enabled: true,
+    },
+    {
+      name: "Reservas y Políticas",
+      enabled: true,
+    },
+    {
+      name: "Perfiles y Roles",
+      enabled: true,
+    },
+    {
+      name: "Notificaciones",
+      enabled: true,
+    },
+    {
+      name: "Personalización del Estudio",
+      enabled: true,
+    },
+  ],
+};
+// Resumen semanal solo de lunes a viernes
+export const weeklySummary = [
+  { day: "Lunes", bookings: 18, attendance: 16 },
+  { day: "Martes", bookings: 20, attendance: 19 },
+  { day: "Miércoles", bookings: 17, attendance: 15 },
+  { day: "Jueves", bookings: 22, attendance: 21 },
+  { day: "Viernes", bookings: 19, attendance: 18 },
+];
 import {
   Admin,
   Booking,
@@ -16,12 +56,12 @@ export const mockUsers: User[] = [
   // Admin
   {
     id: "1",
-    email: "silvia@pilatesreformer.com",
+    email: "silviafpilates@gmail.com",
     name: "Silvia Fernandez",
     role: "admin",
     avatar: "/images/silvia-avatar.jpg",
     phone: "+54 341 2737 492",
-    joinDate: "2025-01-15",
+    joinDate: "2025-05-05",
     isActive: true,
   } as Admin,
 
@@ -159,10 +199,51 @@ export const mockEquipment: Equipment[] = [
     name: "Reformer #6",
     type: "reformer",
     status: "disponible",
-    lastMaintenance: "2024-05-25",
-    notes: "Nuevo equipo",
+    lastMaintenance: "2025-04-24",
+    notes: "Nuevo Amarillo resorte Amariillo cambiado Nuevo ",
   },
 ];
+export const adminSettings = {
+  studioInfo: {
+    name: "Pilates Reformer Studio",
+    logoUrl: "/assets/logo.png",
+    welcomeMessage: "¡Bienvenido a tu espacio de bienestar!",
+  },
+  schedule: {
+    openDays: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
+    slots: [
+      { start: "08:00", end: "12:00" },
+      { start: "14:00", end: "15:00" },
+      { start: "16:00", end: "21:00" },
+    ],
+    beds: 6,
+    holidays: ["2025-06-15", "2025-12-25"],
+  },
+  instructors: [
+    {
+      id: 1,
+      name: "Ana López",
+      specialties: ["Reformer"],
+      availableDays: ["Monday", "Wednesday", "Friday"],
+      notes: "Especialista en clases para principiantes.",
+    },
+  ],
+  bookingPolicy: {
+    maxBookingsPerUser: 5,
+    minCancelTimeHours: 2,
+    refundPolicy: "Reembolso completo si se cancela con 24h de antelación.",
+  },
+  roles: [
+    { name: "admin", permissions: ["all"] },
+    { name: "instructor", permissions: ["view_schedule", "manage_classes"] },
+    { name: "client", permissions: ["book_class", "cancel_booking"] },
+  ],
+  notifications: {
+    admin: true,
+    instructor: true,
+    client: false,
+  },
+};
 
 // Tipos de Clases Mock Data
 export const mockClassTypes: ClassType[] = [
@@ -171,7 +252,7 @@ export const mockClassTypes: ClassType[] = [
     name: "Reformer Básico",
     description: "Introducción al Pilates en Reformer para principiantes",
     duration: 55,
-    maxParticipants: 1,
+    maxParticipants: 6,
     price: 4500,
     level: "Principiante",
     equipmentRequired: ["reformer"],
@@ -181,7 +262,7 @@ export const mockClassTypes: ClassType[] = [
     name: "Reformer Intermedio",
     description: "Clase de nivel intermedio con ejercicios más desafiantes",
     duration: 55,
-    maxParticipants: 1,
+    maxParticipants: 6,
     price: 5000,
     level: "Intermedio",
     equipmentRequired: ["reformer"],
@@ -191,7 +272,7 @@ export const mockClassTypes: ClassType[] = [
     name: "Reformer Avanzado",
     description: "Clase avanzada para estudiantes experimentados",
     duration: 55,
-    maxParticipants: 1,
+    maxParticipants: 6,
     price: 5500,
     level: "Avanzado",
     equipmentRequired: ["reformer"],
