@@ -1,41 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Progress } from '../ui/progress';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { motion } from "framer-motion";
 import {
-  Users,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  UserPlus,
+  Activity,
   AlertCircle,
+  Calendar,
   CheckCircle,
   Clock,
+  DollarSign,
   Star,
-  Activity,
-} from 'lucide-react';
-import { analyticsService } from '../../services/dataService';
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { adminConfig, weeklySummary } from "../../data/mockData";
+import { analyticsService } from "../../services/dataService";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Progress } from "../ui/progress";
 
 export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState(analyticsService.getDashboardStats());
-  const [weeklyRevenueData, setWeeklyRevenueData] = useState(analyticsService.getRevenueData(7));
-  const [classTypeData, setClassTypeData] = useState(analyticsService.getClassTypeDistribution());
+  const [weeklyRevenueData, setWeeklyRevenueData] = useState(
+    analyticsService.getRevenueData(7)
+  );
+  const [classTypeData, setClassTypeData] = useState(
+    analyticsService.getClassTypeDistribution()
+  );
+  // Solo días lunes a viernes para el gráfico de resumen
+  const summaryDays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+  // Gráfico de resumen de reservas y asistencias solo lunes a viernes
+  const summaryChartData = {
+    labels: summaryDays,
+    datasets: [
+      {
+        label: "Reservas",
+        data: weeklySummary.map((d) => d.bookings),
+        backgroundColor: "rgba(54, 162, 235, 0.5)",
+      },
+      {
+        label: "Asistencias",
+        data: weeklySummary.map((d) => d.attendance),
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
+      },
+    ],
+  };
 
   useEffect(() => {
     // Update data on component mount and listen for data changes
@@ -49,30 +77,30 @@ export const AdminDashboard: React.FC = () => {
 
     // Listen for data updates
     const handleDataUpdate = () => updateData();
-    window.addEventListener('dataUpdate', handleDataUpdate);
-    
+    window.addEventListener("dataUpdate", handleDataUpdate);
+
     return () => {
-      window.removeEventListener('dataUpdate', handleDataUpdate);
+      window.removeEventListener("dataUpdate", handleDataUpdate);
     };
   }, []);
 
   const occupancyData = [
-    { time: '07:00', ocupacion: 95 },
-    { time: '09:00', ocupacion: 100 },
-    { time: '11:00', ocupacion: 85 },
-    { time: '13:00', ocupacion: 70 },
-    { time: '15:00', ocupacion: 90 },
-    { time: '17:00', ocupacion: 100 },
-    { time: '19:00', ocupacion: 80 },
+    { time: "07:00", ocupacion: 95 },
+    { time: "09:00", ocupacion: 100 },
+    { time: "11:00", ocupacion: 85 },
+    { time: "13:00", ocupacion: 70 },
+    { time: "15:00", ocupacion: 90 },
+    { time: "17:00", ocupacion: 100 },
+    { time: "19:00", ocupacion: 80 },
   ];
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
-    }
+      transition: { duration: 0.5 },
+    },
   };
 
   const StatCard: React.FC<{
@@ -91,9 +119,7 @@ export const AdminDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{value}</div>
-          <p className="text-xs text-muted-foreground">
-            {description}
-          </p>
+          <p className="text-xs text-muted-foreground">{description}</p>
           {trend && (
             <div className="flex items-center mt-1">
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
@@ -107,10 +133,52 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sección de Configuración Administrador */}
+      {adminConfig?.enabled && (
+        <div className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+          <h2 className="text-lg font-bold mb-2">Configuración</h2>
+          <p className="mb-2 text-blue-900">{adminConfig.message}</p>
+          <div className="flex flex-wrap gap-2">
+            {adminConfig.sections.map((section) => (
+              <Button
+                key={section.name}
+                variant="outline"
+                className="mb-2"
+                disabled={!section.enabled}
+              >
+                {section.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Gráfico de resumen solo lunes a viernes */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-2">
+          Resumen semanal (Lunes a Viernes)
+        </h2>
+        <div style={{ width: "100%", maxWidth: 600 }}>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart
+              data={weeklySummary}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="bookings" fill="#3b82f6" name="Reservas" />
+              <Bar dataKey="attendance" fill="#10b981" name="Asistencias" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dashboard Administrativo
+          </h1>
           <p className="text-gray-600">Resumen completo del estudio</p>
         </div>
         <div className="flex space-x-2">
@@ -132,9 +200,9 @@ export const AdminDashboard: React.FC = () => {
         variants={{
           visible: {
             transition: {
-              staggerChildren: 0.1
-            }
-          }
+              staggerChildren: 0.1,
+            },
+          },
         }}
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
       >
@@ -192,8 +260,11 @@ export const AdminDashboard: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`$${value.toLocaleString()}`, 'Ingresos']}
+                  <Tooltip
+                    formatter={(value) => [
+                      `$${value.toLocaleString()}`,
+                      "Ingresos",
+                    ]}
                   />
                   <Bar dataKey="revenue" fill="#10b981" />
                 </BarChart>
@@ -211,9 +282,7 @@ export const AdminDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Tipos de Clase</CardTitle>
-              <CardDescription>
-                Distribución por tipo de clase
-              </CardDescription>
+              <CardDescription>Distribución por tipo de clase</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -231,15 +300,18 @@ export const AdminDashboard: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}%`, 'Porcentaje']} />
+                  <Tooltip formatter={(value) => [`${value}%`, "Porcentaje"]} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
                 {classTypeData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <div className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
+                      <div
+                        className="w-3 h-3 rounded-full mr-2"
                         style={{ backgroundColor: item.color }}
                       />
                       <span>{item.name}</span>
@@ -272,13 +344,13 @@ export const AdminDashboard: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
                   <YAxis domain={[0, 100]} />
-                  <Tooltip formatter={(value) => [`${value}%`, 'Ocupación']} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="ocupacion" 
-                    stroke="#3b82f6" 
+                  <Tooltip formatter={(value) => [`${value}%`, "Ocupación"]} />
+                  <Line
+                    type="monotone"
+                    dataKey="ocupacion"
+                    stroke="#3b82f6"
                     strokeWidth={3}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -302,15 +374,19 @@ export const AdminDashboard: React.FC = () => {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">Retención de Clientes</span>
+                  <span className="text-sm font-medium">
+                    Retención de Clientes
+                  </span>
                   <span className="text-sm text-muted-foreground">94%</span>
                 </div>
                 <Progress value={94} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">Satisfacción Promedio</span>
+                  <span className="text-sm font-medium">
+                    Satisfacción Promedio
+                  </span>
                   <span className="text-sm text-muted-foreground">4.8/5</span>
                 </div>
                 <div className="flex">
@@ -318,7 +394,9 @@ export const AdminDashboard: React.FC = () => {
                     <Star
                       key={star}
                       className={`w-4 h-4 ${
-                        star <= 4.8 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        star <= 4.8
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
@@ -345,11 +423,13 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
-                    <span className="text-sm text-green-800">Objetivos Cumplidos</span>
+                    <span className="text-sm text-green-800">
+                      Objetivos Cumplidos
+                    </span>
                   </div>
                   <Badge className="bg-green-100 text-green-800">8/10</Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg">
                   <div className="flex items-center">
                     <Clock className="w-4 h-4 text-yellow-600 mr-2" />
@@ -361,7 +441,9 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
                   <div className="flex items-center">
                     <AlertCircle className="w-4 h-4 text-red-600 mr-2" />
-                    <span className="text-sm text-red-800">Requiere Atención</span>
+                    <span className="text-sm text-red-800">
+                      Requiere Atención
+                    </span>
                   </div>
                   <Badge className="bg-red-100 text-red-800">1</Badge>
                 </div>
@@ -388,45 +470,59 @@ export const AdminDashboard: React.FC = () => {
             <div className="space-y-4">
               {[
                 {
-                  time: 'Hace 5 min',
-                  action: 'Nueva reserva realizada',
-                  user: 'Carmen Rodriguez',
-                  details: 'Reformer Básico - 09:00',
-                  type: 'booking'
+                  time: "Hace 5 min",
+                  action: "Nueva reserva realizada",
+                  user: "Carmen Rodriguez",
+                  details: "Reformer Básico - 09:00",
+                  type: "booking",
                 },
                 {
-                  time: 'Hace 15 min',
-                  action: 'Cliente canceló clase',
-                  user: 'Laura Martínez',
-                  details: 'Reformer Intermedio - 14:00',
-                  type: 'cancellation'
+                  time: "Hace 15 min",
+                  action: "Cliente canceló clase",
+                  user: "Laura Martínez",
+                  details: "Reformer Intermedio - 14:00",
+                  type: "cancellation",
                 },
                 {
-                  time: 'Hace 1 hora',
-                  action: 'Nuevo cliente registrado',
-                  user: 'Sofia Vargas',
-                  details: 'Membresía: Por clase',
-                  type: 'registration'
+                  time: "Hace 1 hora",
+                  action: "Nuevo cliente registrado",
+                  user: "Sofia Vargas",
+                  details: "Membresía: Por clase",
+                  type: "registration",
                 },
                 {
-                  time: 'Hace 2 horas',
-                  action: 'Clase completada',
-                  user: 'María González',
-                  details: 'Reformer Básico - 11:00',
-                  type: 'completed'
+                  time: "Hace 2 horas",
+                  action: "Clase completada",
+                  user: "María González",
+                  details: "Reformer Básico - 11:00",
+                  type: "completed",
                 },
               ].map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className={`w-2 h-2 rounded-full mt-2 ${
-                    activity.type === 'booking' ? 'bg-green-500' :
-                    activity.type === 'cancellation' ? 'bg-red-500' :
-                    activity.type === 'registration' ? 'bg-blue-500' :
-                    'bg-purple-500'
-                  }`} />
+                <div
+                  key={index}
+                  className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full mt-2 ${
+                      activity.type === "booking"
+                        ? "bg-green-500"
+                        : activity.type === "cancellation"
+                        ? "bg-red-500"
+                        : activity.type === "registration"
+                        ? "bg-blue-500"
+                        : "bg-purple-500"
+                    }`}
+                  />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-sm text-gray-600">{activity.user} - {activity.details}</p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.action}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {activity.user} - {activity.details}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {activity.time}
+                    </p>
                   </div>
                 </div>
               ))}
