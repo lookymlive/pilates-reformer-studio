@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { adminConfig, mockClassTypes } from "../../data/mockData";
+import { mockClassTypes } from "../../data/mockData";
 import {
   getStudioSettings,
   updateStudioSettings,
@@ -7,6 +7,7 @@ import {
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Toast,
   ToastDescription,
@@ -110,132 +111,154 @@ const ConfigManagement: React.FC = () => {
     <ToastProvider>
       <div className="space-y-6 p-4">
         <h1 className="text-2xl font-bold mb-2">Configuración del Estudio</h1>
-        {/* Menú de secciones */}
-        <div className="flex flex-wrap gap-2">
-          {adminConfig.sections.map((section) => (
-            <Button
-              key={section.name}
-              variant="outline"
-              className="mb-2"
-              disabled={!section.enabled}
-            >
-              {section.name}
-            </Button>
-          ))}
-        </div>
-
-        {/* Horarios y Disponibilidad */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Horarios y Disponibilidad</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-2">
-              <strong>Días de apertura:</strong>
-              <div className="flex gap-2 mt-1 flex-wrap">
-                {weekDays.map((day) => (
-                  <Button
-                    key={day}
-                    variant={openDays.includes(day) ? "default" : "outline"}
-                    onClick={() => handleOpenDaysChange(day)}
-                    className={
-                      openDays.includes(day) ? "bg-blue-600 text-white" : ""
-                    }
-                  >
-                    {day}
+        <Tabs defaultValue="resumen" className="w-full">
+          <TabsList>
+            <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            <TabsTrigger value="horarios">Horarios</TabsTrigger>
+            <TabsTrigger value="tipos-clase">Tipos de Clase</TabsTrigger>
+            <TabsTrigger value="turnos">Turnos</TabsTrigger>
+          </TabsList>
+          <TabsContent value="resumen">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen General</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  <strong>Días abiertos:</strong> {openDays.join(", ")}
+                </p>
+                <p>
+                  <strong>Turnos configurados:</strong> {slots.length}
+                </p>
+                <p>
+                  <strong>Camas disponibles:</strong> {beds}
+                </p>
+                <p>
+                  <strong>Feriados:</strong> {holidays}
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="horarios">
+            <Card>
+              <CardHeader>
+                <CardTitle>Horarios y Disponibilidad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-2">
+                  <strong>Días de apertura:</strong>
+                  <div className="flex gap-2 mt-1 flex-wrap">
+                    {weekDays.map((day) => (
+                      <Button
+                        key={day}
+                        variant={openDays.includes(day) ? "default" : "outline"}
+                        onClick={() => handleOpenDaysChange(day)}
+                        className={
+                          openDays.includes(day) ? "bg-blue-600 text-white" : ""
+                        }
+                      >
+                        {day}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <strong>Turnos:</strong>
+                  <ul className="list-disc ml-6">
+                    {slots.map((slot, idx) => (
+                      <li key={idx} className="flex items-center gap-2 mb-1">
+                        <Input
+                          type="time"
+                          value={slot.start}
+                          onChange={(e) =>
+                            handleSlotChange(idx, "start", e.target.value)
+                          }
+                          className="w-24"
+                        />
+                        a
+                        <Input
+                          type="time"
+                          value={slot.end}
+                          onChange={(e) =>
+                            handleSlotChange(idx, "end", e.target.value)
+                          }
+                          className="w-24"
+                        />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleRemoveSlot(idx)}
+                        >
+                          -
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button size="sm" onClick={handleAddSlot} className="mt-2">
+                    + Agregar turno
                   </Button>
-                ))}
-              </div>
-            </div>
-            <div className="mb-2">
-              <strong>Turnos:</strong>
-              <ul className="list-disc ml-6">
-                {slots.map((slot, idx) => (
-                  <li key={idx} className="flex items-center gap-2 mb-1">
-                    <Input
-                      type="time"
-                      value={slot.start}
-                      onChange={(e) =>
-                        handleSlotChange(idx, "start", e.target.value)
-                      }
-                      className="w-24"
-                    />
-                    a
-                    <Input
-                      type="time"
-                      value={slot.end}
-                      onChange={(e) =>
-                        handleSlotChange(idx, "end", e.target.value)
-                      }
-                      className="w-24"
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleRemoveSlot(idx)}
-                    >
-                      -
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-              <Button size="sm" onClick={handleAddSlot} className="mt-2">
-                + Agregar turno
-              </Button>
-            </div>
-            <div className="mb-2 flex items-center gap-2">
-              <strong>Camas disponibles:</strong>
-              <Input
-                type="number"
-                min={1}
-                max={20}
-                value={beds}
-                onChange={handleBedsChange}
-                className="w-20"
-              />
-            </div>
-            <div className="mb-2 flex items-center gap-2">
-              <strong>Feriados:</strong>
-              <Input
-                type="text"
-                value={holidays}
-                onChange={handleHolidaysChange}
-                className="w-96"
-              />
-              <span className="text-xs text-gray-500">Separar por coma</span>
-            </div>
-            <Button onClick={handleSave} disabled={!editing} className="mt-2">
-              Guardar cambios
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Tipos de Clase */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tipos de Clase</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc ml-6">
-              {mockClassTypes.map((type) => (
-                <li key={type.id}>
-                  <strong>{type.name}</strong> - {type.description} (Máx:{" "}
-                  {type.maxParticipants} personas)
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Gestión de Turnos de Pilates */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gestión de Turnos de Pilates</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AdminTurnos />
-          </CardContent>
-        </Card>
+                </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <strong>Camas disponibles:</strong>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={beds}
+                    onChange={handleBedsChange}
+                    className="w-20"
+                  />
+                </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <strong>Feriados:</strong>
+                  <Input
+                    type="text"
+                    value={holidays}
+                    onChange={handleHolidaysChange}
+                    className="w-96"
+                  />
+                  <span className="text-xs text-gray-500">
+                    Separar por coma
+                  </span>
+                </div>
+                <Button
+                  onClick={handleSave}
+                  disabled={!editing}
+                  className="mt-2"
+                >
+                  Guardar cambios
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="tipos-clase">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tipos de Clase</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc ml-6">
+                  {mockClassTypes.map((type) => (
+                    <li key={type.id}>
+                      <strong>{type.name}</strong> - {type.description} (Máx:{" "}
+                      {type.maxParticipants} personas)
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="turnos">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestión de Turnos de Pilates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AdminTurnos />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Toast de guardado */}
         {showToast && (
