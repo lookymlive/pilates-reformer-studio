@@ -51,6 +51,34 @@ export default function AdminTurnos() {
     setSaving((prev) => ({ ...prev, [id]: false }));
   };
 
+  const renderResumen = () => {
+    const resumen = diasSemana.map((dia) => {
+      const turnosDia = turnos.filter((t) => t.dia === dia);
+      const totalCamas = turnosDia.length * MAX_CAMAS;
+      const ocupadas = turnosDia.reduce(
+        (acc, turno) => acc + turno.camas.filter((c: any) => c.alumno).length,
+        0
+      );
+      const porcentaje =
+        totalCamas > 0 ? ((ocupadas / totalCamas) * 100).toFixed(2) : "0.00";
+      return { dia, porcentaje, ocupadas, totalCamas };
+    });
+
+    return (
+      <div className="mb-4">
+        <h2 className="text-lg font-bold">Resumen de Ocupación</h2>
+        <ul className="list-disc ml-6">
+          {resumen.map(({ dia, porcentaje, ocupadas, totalCamas }) => (
+            <li key={dia}>
+              <strong>{dia}:</strong> {ocupadas}/{totalCamas} camas ocupadas (
+              {porcentaje}%)
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   const renderTabla = (horas: string[]) => (
     <Table>
       <TableHeader>
@@ -127,9 +155,10 @@ export default function AdminTurnos() {
                       </div>
                     ))}
                     <div className="text-xs text-gray-500 mt-1">
-                      {`${
-                        camas.filter((c: any) => c.alumno).length
-                      }/${MAX_CAMAS} ocupadas`}
+                      {`
+                        ${camas.filter((c: any) => c.alumno).length}
+                      `}
+                      /{MAX_CAMAS} ocupadas
                     </div>
                   </div>
                 </TableCell>
@@ -151,6 +180,7 @@ export default function AdminTurnos() {
   return (
     <Card className="p-4">
       <CardContent>
+        {renderResumen()}
         <Tabs defaultValue="manana" className="w-full">
           <TabsList>
             <TabsTrigger value="manana">Turnos Mañana</TabsTrigger>
