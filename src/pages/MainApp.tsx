@@ -11,8 +11,8 @@ import { useAuth, useRole } from "../contexts/AuthContext";
 import ConfigManagement from "../components/admin/ConfigManagement";
 import { ScheduleManagement } from "../components/admin/ScheduleManagement";
 import { UserManagement } from "../components/admin/UserManagement";
-import { ClassCalendar } from "../components/booking/ClassCalendar";
 import { MyBookings } from "../components/booking/MyBookings";
+import CalendarView from "../components/CalendarView";
 
 // Placeholder components para las otras rutas
 const Reports = () => (
@@ -41,12 +41,7 @@ const InstructorStudents = () => (
   </div>
 );
 
-const InstructorSchedule = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold text-gray-900 mb-4">Mi Horario</h1>
-    <p className="text-gray-600">Calendario personal en desarrollo...</p>
-  </div>
-);
+const InstructorSchedule = () => <CalendarView />;
 
 const ClientProfile = () => (
   <div className="p-6">
@@ -98,7 +93,7 @@ const routes: Route[] = [
 
   // Client routes
   { path: "/dashboard", component: ClientDashboard, roles: ["cliente"] },
-  { path: "/client/book", component: ClassCalendar, roles: ["cliente"] },
+  { path: "/client/book", component: CalendarView, roles: ["cliente"] },
   { path: "/client/bookings", component: MyBookings, roles: ["cliente"] },
   { path: "/client/profile", component: ClientProfile, roles: ["cliente"] },
   {
